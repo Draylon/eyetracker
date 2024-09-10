@@ -13,3 +13,22 @@ model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.2)
 
 # Predicting 2D points based on facial features
 predicted_2d = model.predict(new_input_features)
+
+
+def create_database():
+    pass
+
+def load_training_model():
+    pass
+
+def compose_training_model():
+    pass
+
+def load_database():
+    pass
+
+def train_model():
+    pass
+
+def retrieve_model():
+    pass

@@ -15,7 +15,6 @@ RIGHT_IRIS = [469, 470, 471, 472]
 
 
 
-# 3D model points of a standard face (nose, chin, eyes, mouth corners)
 FACE_3D_MODEL = np.array([
     [0.0, 0.0, 0.0],  # Nose tip
     [0.0, -330.0, -65.0],  # Chin
