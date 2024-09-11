@@ -87,37 +87,52 @@ with mp_face_mesh.FaceMesh(
             dist_coeffs = np.zeros((4, 1))
 
             # Solve for pose (rotation and translation vectors)
-            success, rotation_vector, translation_vector = cv.solvePnP(
-                FACE_3D_MODEL, FACE_2D_POINTS, camera_matrix, dist_coeffs)
-
-            # Project a 3D point to the image plane to get the forward-facing direction
-            nose_end_3d = np.array([[0, 0, 1000.0]], dtype=np.float32)
-            nose_end_2d, _ = cv.projectPoints(nose_end_3d, rotation_vector, translation_vector, camera_matrix, dist_coeffs)
-
-            # Draw the direction line (nose direction)
-            p1 = (int(FACE_2D_POINTS[0][0]), int(FACE_2D_POINTS[0][1]))  # Nose tip
-            p2 = (int(nose_end_2d[0][0][0]), int(nose_end_2d[0][0][1]))  # Projected point
+            success, rotation_vector, translation_vector = cv.solvePnP(FACE_3D_MODEL, FACE_2D_POINTS, camera_matrix, dist_coeffs)
             
-            cv.line(frame, p1, p2, (255, 0, 0), 2)
+            # 2D Face center
+            projected_points_2d, _ = cv.projectPoints(FACE_3D_MODEL, rotation_vector, translation_vector, camera_matrix, dist_coeffs)
+            face_center_3d = np.mean(FACE_3D_MODEL, axis=0)
+            face_center_2d, _ = cv.projectPoints(np.array([face_center_3d]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
+            im2Dface_center = tuple(map(int, face_center_2d[0][0]))
 
 
+            # 3D face direction vector
+            rotation_matrix, _ = cv.Rodrigues(rotation_vector)
+            forward_vector = np.array([[0], [0], [1]])
+            direction_vector_3d = rotation_matrix.dot(forward_vector)
+            im3Dface_dir = tuple(direction_vector_3d.ravel())
 
-            # ==========EYES==============
+            #draw face direction vector
+            #nose_end_3d = np.array([[0, 0, 1000.0]], dtype=np.float32)
+            #nose_end_2d, _ = cv.projectPoints(nose_end_3d, rotation_vector, translation_vector, camera_matrix, dist_coeffs)
+            #p1 = (int(FACE_2D_POINTS[0][0]), int(FACE_2D_POINTS[0][1]))
+            #p2 = (int(nose_end_2d[0][0][0]), int(nose_end_2d[0][0][1]))
+            #cv.line(frame, p1, p2, (255, 0, 0), 2)
 
-            # Draw eye contours
-            cv.polylines(frame, [mesh_points[LEFT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
-            cv.polylines(frame, [mesh_points[RIGHT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
 
-            #+==========IRIS=============
-            #square
-            # cv.polylines(frame, [mesh_points[LEFT_IRIS]], True, (0,255,0), 1, cv.LINE_AA)
-            # cv.polylines(frame, [mesh_points[RIGHT_IRIS]], True, (0,255,0), 1, cv.LINE_AA)
-            
+            #iris position
             (l_cx, l_cy), l_radius = cv.minEnclosingCircle(mesh_points[LEFT_IRIS])
             (r_cx, r_cy), r_radius = cv.minEnclosingCircle(mesh_points[RIGHT_IRIS])
             center_left = np.array([l_cx, l_cy], dtype=np.int32)
             center_right = np.array([r_cx, r_cy], dtype=np.int32)
             
+            diff_left = mesh_points[LEFT_EYE] - center_left
+            diff_right = mesh_points[RIGHT_EYE] - center_right
+
+            # ==========DRAW EYES==============
+
+            print([mesh_points[LEFT_EYE]])
+
+            # Draw eye
+            cv.polylines(frame, [mesh_points[LEFT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
+            cv.polylines(frame, [mesh_points[RIGHT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
+
+            #=================================
+            #+==========DRAW IRIS=============
+            #square
+            # cv.polylines(frame, [mesh_points[LEFT_IRIS]], True, (0,255,0), 1, cv.LINE_AA)
+            # cv.polylines(frame, [mesh_points[RIGHT_IRIS]], True, (0,255,0), 1, cv.LINE_AA)
+
             #ball
             #cv.circle(frame, center_left, int(l_radius), (0,255,0), 2, cv.LINE_AA)
             #cv.circle(frame, center_right, int(r_radius), (0,255,0), 2, cv.LINE_AA)
@@ -129,6 +144,8 @@ with mp_face_mesh.FaceMesh(
             # drawing on the mask 
             cv.circle(mask, center_left, int(l_radius), (255,255,255), -1, cv.LINE_AA)
             cv.circle(mask, center_right, int(r_radius), (255,255,255), -1, cv.LINE_AA)
+            #================================
+
             
         cv.imshow('Mask', mask)
         cv.imshow('img', frame)
