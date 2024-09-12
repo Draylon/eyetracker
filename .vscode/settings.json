@@ -1,4 +1,8 @@
 {
+    "python.analysis.extraPaths": ["./"],
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.autoImportCompletions": true
+    "python.analysis.autoImportCompletions": true,
+    "python.defaultInterpreterPath": "D:\\Program Files (x86)\\Python312\\python.exe",
+    "python.linting.pylintArgs": ["--generated-members", "from_json,query", "torch.*"],
+    
 }
