@@ -9,6 +9,11 @@ for i,p in enumerate(params):
         # if param i+1 (<name>) is provided, create a database and
         # a model with the parameter, otherwise create a custom name
         
+        train1 = Training()
+        train1.wait()
+        # get the training "scene"
+        # insert the scene 
+
         #tasks:
         #gather database
         #save database

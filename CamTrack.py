@@ -3,6 +3,8 @@
 import cv2 as cv 
 import numpy as np
 import mediapipe as mp
+import threading
+import utils
 
 # left eyes indices
 LEFT_EYE =[ 362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385,384, 398 ]
@@ -34,8 +36,23 @@ RIGHT_MOUTH_CORNER = 291
 
 class CamTrack:
     def __init__(self):
+        'Create camera object'
         self.mp_face_mesh = mp.solutions.face_mesh
         self.cap = cv.VideoCapture("http://127.0.0.1:5696/video")
+        self._feature_fetch = lambda *args,**kwargs: None
+
+    def set_featureFetch(self,fun):
+        'Set the function to be called each available frame in the camera'
+        self._feature_fetch = fun
+
+    def start_worker(self):
+        self._mainthread = utils.StoppableThread(target = self.mainloop)
+        #self.mainthread = threading.Thread(target = self.mainloop)
+        self._mainthread.start()
+
+    def stop_worker(self):
+        self._mainthread.stop()
+        self._mainthread.join()
 
     def mainloop(self):
         with self.mp_face_mesh.FaceMesh(
@@ -44,7 +61,7 @@ class CamTrack:
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         ) as face_mesh:
-            while True:
+            while not self._mainthread.stopped():
                 ret, frame = self.cap.read()
                 if not ret:
                     break
@@ -108,7 +125,7 @@ class CamTrack:
                     #nose_end_2d, _ = cv.projectPoints(nose_end_3d, rotation_vector, translation_vector, camera_matrix, dist_coeffs)
                     #p1 = (int(FACE_2D_POINTS[0][0]), int(FACE_2D_POINTS[0][1]))
                     #p2 = (int(nose_end_2d[0][0][0]), int(nose_end_2d[0][0][1]))
-                    #cv.line(frame, p1, p2, (255, 0, 0), 2)
+                    #cv.line(mask, p1, p2, (255, 0, 0), 2)
 
 
                     #iris position
@@ -125,38 +142,43 @@ class CamTrack:
                     print([mesh_points[LEFT_EYE]])
 
                     # Draw eye
-                    cv.polylines(frame, [mesh_points[LEFT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
-                    cv.polylines(frame, [mesh_points[RIGHT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
+                    cv.polylines(mask, [mesh_points[LEFT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
+                    cv.polylines(mask, [mesh_points[RIGHT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
 
                     #=================================
                     #+==========DRAW IRIS=============
                     #square
-                    # cv.polylines(frame, [mesh_points[LEFT_IRIS]], True, (0,255,0), 1, cv.LINE_AA)
-                    # cv.polylines(frame, [mesh_points[RIGHT_IRIS]], True, (0,255,0), 1, cv.LINE_AA)
+                    # cv.polylines(mask, [mesh_points[LEFT_IRIS]], True, (0,255,0), 1, cv.LINE_AA)
+                    # cv.polylines(mask, [mesh_points[RIGHT_IRIS]], True, (0,255,0), 1, cv.LINE_AA)
 
                     #ball
-                    #cv.circle(frame, center_left, int(l_radius), (0,255,0), 2, cv.LINE_AA)
-                    #cv.circle(frame, center_right, int(r_radius), (0,255,0), 2, cv.LINE_AA)
+                    #cv.circle(mask, center_left, int(l_radius), (0,255,0), 2, cv.LINE_AA)
+                    #cv.circle(mask, center_right, int(r_radius), (0,255,0), 2, cv.LINE_AA)
 
                     #crosshair
-                    cv.circle(frame, center_left, 1, (0,255,0), -1, cv.LINE_AA)
-                    cv.circle(frame, center_right, 1, (0,255,0), -1, cv.LINE_AA)
+                    cv.circle(mask, center_left, 1, (0,255,0), -1, cv.LINE_AA)
+                    cv.circle(mask, center_right, 1, (0,255,0), -1, cv.LINE_AA)
 
                     # drawing on the mask 
-                    cv.circle(mask, center_left, int(l_radius), (255,255,255), -1, cv.LINE_AA)
-                    cv.circle(mask, center_right, int(r_radius), (255,255,255), -1, cv.LINE_AA)
+                    #cv.circle(mask, center_left, int(l_radius), (255,255,255), -1, cv.LINE_AA)
+                    #cv.circle(mask, center_right, int(r_radius), (255,255,255), -1, cv.LINE_AA)
                     #================================
 
                     # this runs in a thread
                     # the core will provide the parameters
                     # this thread will provide the loop
-                    # self._feature_fetch()
+                    self._feature_fetch(mask,[
+                        im2Dface_center,
+                        im3Dface_dir,
+                        diff_left,
+                        diff_right
+                    ])
                     
-                cv.imshow('Mask', mask)
-                cv.imshow('img', frame)
-                key = cv.waitKey(1)
-                if key == ord('q'):
-                    break
+                #cv.imshow('Mask', mask)
+                #cv.imshow('img', frame)
+                #key = cv.waitKey(1)
+                #if key == ord('q'):
+                    #break
 
     
     def __del__(self):
