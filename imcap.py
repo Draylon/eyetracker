@@ -146,6 +146,10 @@ with mp_face_mesh.FaceMesh(
             cv.circle(mask, center_right, int(r_radius), (255,255,255), -1, cv.LINE_AA)
             #================================
 
+            # this runs in a thread
+            # the core will provide the parameters
+            # this thread will provide the loop
+            # self._feature_fetch()
             
         cv.imshow('Mask', mask)
         cv.imshow('img', frame)
