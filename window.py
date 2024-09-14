@@ -18,27 +18,20 @@ class CompWindow:
         self._eventHandler = eventHdl
         pg.init()
         self.screen = pg.display.set_mode(SCREEN_SIZE, pg.SCALED | pg.FULLSCREEN)
-        self.done = False
+        self._done = False
         
-
         hwnd = pg.display.get_wm_info()["window"]
         win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
         win32gui.SetLayeredWindowAttributes(hwnd, win32api.RGB(*fuchsia), 0, win32con.LWA_COLORKEY)
 
-        
+    def stop_worker(self):
+        self._done=True
 
     def start_worker(self):
-        self._mainthread = utils.StoppableThread(target = self.mainloop)
-        #self.mainthread = threading.Thread(target = self.mainloop)
-        self._mainthread.start()
-
-    def stop_worker(self):
-        self.done=True
-        self._mainthread.stop()
-        self._mainthread.join()
+        return self.mainloop()
 
     def mainloop(self):
-        while not self.done:
+        while not self._done:
             self._eventHandler(pg.event.get())
             self.screen.fill(fuchsia)
             #pg.draw.rect(screen,)

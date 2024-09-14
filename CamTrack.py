@@ -37,20 +37,24 @@ RIGHT_MOUTH_CORNER = 291
 class CamTrack:
     def __init__(self):
         'Create camera object'
-        self.mp_face_mesh = mp.solutions.face_mesh
         self.cap = cv.VideoCapture("http://127.0.0.1:5696/video")
+        self.mp_face_mesh = mp.solutions.face_mesh
         self._feature_fetch = lambda *args,**kwargs: None
+        
+        #self.mask1 = mask = np.zeros((800, 600), dtype=np.uint8)
 
     def set_featureFetch(self,fun):
         'Set the function to be called each available frame in the camera'
         self._feature_fetch = fun
 
     def start_worker(self):
+        self._stop1 = False
         self._mainthread = utils.StoppableThread(target = self.mainloop)
         #self.mainthread = threading.Thread(target = self.mainloop)
         self._mainthread.start()
 
     def stop_worker(self):
+        self._stop1=True
         self._mainthread.stop()
         self._mainthread.join()
 
@@ -61,7 +65,7 @@ class CamTrack:
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         ) as face_mesh:
-            while not self._mainthread.stopped():
+            while not self._mainthread.stopped() and not self._stop1:
                 ret, frame = self.cap.read()
                 if not ret:
                     break
@@ -70,7 +74,7 @@ class CamTrack:
                 rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                 img_h, img_w = frame.shape[:2]
                 results = face_mesh.process(rgb_frame)
-                mask = np.zeros((img_h, img_w), dtype=np.uint8)
+                #mask = np.zeros((img_h, img_w), dtype=np.uint8)
 
                 if results.multi_face_landmarks:
                     # print((results.multi_face_landmarks[0]))
@@ -120,12 +124,13 @@ class CamTrack:
                     direction_vector_3d = rotation_matrix.dot(forward_vector)
                     im3Dface_dir = tuple(direction_vector_3d.ravel())
 
+                    
                     #draw face direction vector
-                    #nose_end_3d = np.array([[0, 0, 1000.0]], dtype=np.float32)
-                    #nose_end_2d, _ = cv.projectPoints(nose_end_3d, rotation_vector, translation_vector, camera_matrix, dist_coeffs)
-                    #p1 = (int(FACE_2D_POINTS[0][0]), int(FACE_2D_POINTS[0][1]))
-                    #p2 = (int(nose_end_2d[0][0][0]), int(nose_end_2d[0][0][1]))
-                    #cv.line(mask, p1, p2, (255, 0, 0), 2)
+                    nose_end_3d = np.array([[0, 0, 1000.0]], dtype=np.float32)
+                    nose_end_2d, _ = cv.projectPoints(nose_end_3d, rotation_vector, translation_vector, camera_matrix, dist_coeffs)
+                    p1 = (int(FACE_2D_POINTS[0][0]), int(FACE_2D_POINTS[0][1]))
+                    p2 = (int(nose_end_2d[0][0][0]), int(nose_end_2d[0][0][1]))
+                    #cv.line(mask, p1, p2, (255, 255, 255), 2)
 
 
                     #iris position
@@ -139,11 +144,11 @@ class CamTrack:
 
                     # ==========DRAW EYES==============
 
-                    print([mesh_points[LEFT_EYE]])
+                    #print([mesh_points[LEFT_EYE]])
 
                     # Draw eye
-                    cv.polylines(mask, [mesh_points[LEFT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
-                    cv.polylines(mask, [mesh_points[RIGHT_EYE]], True, (0, 255, 255), 1, cv.LINE_AA)
+                    #cv.polylines(mask, [mesh_points[LEFT_EYE]], True, (255, 255, 255), 1, cv.LINE_AA)
+                    #cv.polylines(mask, [mesh_points[RIGHT_EYE]], True, (255, 255, 255), 1, cv.LINE_AA)
 
                     #=================================
                     #+==========DRAW IRIS=============
@@ -156,8 +161,8 @@ class CamTrack:
                     #cv.circle(mask, center_right, int(r_radius), (0,255,0), 2, cv.LINE_AA)
 
                     #crosshair
-                    cv.circle(mask, center_left, 1, (0,255,0), -1, cv.LINE_AA)
-                    cv.circle(mask, center_right, 1, (0,255,0), -1, cv.LINE_AA)
+                    #cv.circle(mask, center_left, 1, (255, 255, 255), -1, cv.LINE_AA)
+                    #cv.circle(mask, center_right, 1, (255, 255, 255), -1, cv.LINE_AA)
 
                     # drawing on the mask 
                     #cv.circle(mask, center_left, int(l_radius), (255,255,255), -1, cv.LINE_AA)
@@ -167,12 +172,13 @@ class CamTrack:
                     # this runs in a thread
                     # the core will provide the parameters
                     # this thread will provide the loop
-                    self._feature_fetch(mask,[
-                        im2Dface_center,
-                        im3Dface_dir,
+                    self._feature_fetch([
+                        np.array([list(im2Dface_center)]),
+                        np.array([list(im3Dface_dir)]),
                         diff_left,
                         diff_right
                     ])
+                    #self.mask1 = mask
                     
                 #cv.imshow('Mask', mask)
                 #cv.imshow('img', frame)

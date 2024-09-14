@@ -3,6 +3,6 @@
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": true,
     "python.defaultInterpreterPath": "D:\\Program Files (x86)\\Python312\\python.exe",
-    "python.linting.pylintArgs": ["--generated-members", "from_json,query", "torch.*"],
+    "python.linting.pylintArgs": ["--generate-members", "from_json,query", "torch.*", "--extension-pkg-whitelist=cv2"],
     
 }

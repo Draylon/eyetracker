@@ -1,16 +1,21 @@
 import sys
 
+
+
 params = sys.argv[1:]
 #pairs = [(params[a],params[a+1]) for a in range(0,len(params),2)]
-
+params = ["create"]
 for i,p in enumerate(params):
     if p == "create":
         #logic:
         # if param i+1 (<name>) is provided, create a database and
         # a model with the parameter, otherwise create a custom name
         
+        print("start Training")
+        from core import Training
         train1 = Training()
-        train1.wait()
+        train1.start()
+        print("done Training")
         # get the training "scene"
         # insert the scene 
 
@@ -43,3 +48,10 @@ for i,p in enumerate(params):
         #filter for outliers in the data
         #train the model again and save
         #close
+        pass
+    
+def rerun():
+    print("start Training")
+    train1 = Training()
+    train1.start()
+    print("done Training")
