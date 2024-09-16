@@ -38,3 +38,4 @@ class CompWindow:
             self._drawfunction()
             #pg.draw.rect(screen, dark_red, pg.Rect(30, 30, 60, 60))
             pg.display.update()
+            

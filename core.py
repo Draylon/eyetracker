@@ -9,14 +9,14 @@ import cv2 as cv
 import numpy as np
 
 class Training:
-    def __init__(self):
+    def __init__(self,name: str):
         
+        self.name = name
         self.scr_coords = (0,0)
         
         #create camera object
         #create Window object
         
-        self.df_print = False
         self.df_feat = pd.DataFrame()
         self.cam_instance = CamTrack()
         self.cam_instance.set_featureFetch(self.caller)
@@ -66,7 +66,25 @@ class Training:
             if self._statemachine['face'] >= len(self._screen_pos) - 1:
                 print("Done all training")
             return
-            
+        
+    def save_training(self):
+        #save the complete version
+        #self.df_feat.to_json('database/df_compl_'+self.name+'.json')
+        
+        info = pd.DataFrame(columns=['feature','shape'])
+        #save the name+shape
+        for i in range(len(self.df_feat.columns)):
+            add1 = pd.DataFrame([[self.df_feat.columns[i],np.array(self.df_feat.iloc[0,i]).shape]],columns=['feature','shape']) # type: ignore
+            info = pd.concat([info,info,add1],ignore_index=True)
+        
+        info.to_json('database/db_info_'+self.name+'.json')
+        
+        flattened = pd.DataFrame([ [np.concatenate([ col.flatten() for col in line]).tolist()] for _,line in self.df_feat.iloc[:,0:4].iterrows() ],columns=['data'])
+        flattened.insert(loc=len(flattened.columns),column='target',value=self.df_feat.iloc[:,4])
+        flattened.to_json('database/df_flat_'+self.name+'.json')
+        
+        #self.df_feat.to_sql('database/df_'+self.name+'.csv')
+        #self.df_feat = pd.read_csv('data/testmdl.csv')
         
     def stageEvents(self,evl = [pg.event.Event]):
         #window event
@@ -78,6 +96,8 @@ class Training:
                 self.cam_instance.stop_worker()
                 self.wnd.stop_worker()
                 #self.done = True
+                self.save_training()
+                
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 #next_stage
                 print("nextstage")
@@ -136,17 +156,3 @@ class Training:
             add1.insert(loc=len(add1.columns), column='iris_pos', value=[self._screen_pos[self._statemachine['eyes']].tolist()])
             self.df_feat = pd.concat([self.df_feat,add1], ignore_index=True)
             
-            #save the complete version
-            self.df_feat.to_csv('data/testmdl.csv')
-            #self.df_feat = pd.read_csv('data/testmdl.csv')
-            
-            #read the dataframe file, flatten it and feed it to the AI @ the core
-            #probably should move this bit into the core @ utils.py
-            flattened = pd.DataFrame([ [np.concatenate([ col.flatten() for col in line]).tolist()] for _,line in self.df_feat.iloc[:,0:4].iterrows() ],columns=['data'])
-            flattened.insert(loc=len(flattened.columns),column='target',value=self.df_feat.iloc[:,4])
-            
-            
-            if not self.df_print:
-                self.df_print = True
-                print("ayy lmao")
-                print(self.df_feat)

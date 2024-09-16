@@ -1,1 +1,4 @@
 *.dat
+*.json
+*.keras
+*.csv

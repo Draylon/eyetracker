@@ -1,28 +1,41 @@
 import sys
-
-
+import datetime
+from utils import compose_model_db
 
 params = sys.argv[1:]
 #pairs = [(params[a],params[a+1]) for a in range(0,len(params),2)]
-params = ["create"]
+params = ["create", "ayylmao"]
 for i,p in enumerate(params):
     if p == "create":
         #logic:
+        name = None
+        try:
+            name = params[i+1]
+        except Exception as _: pass
+        if name == None:
+            name = datetime.datetime.now().strftime('%Y%m%d_%H%M%S%f')
         # if param i+1 (<name>) is provided, create a database and
         # a model with the parameter, otherwise create a custom name
         
-        print("start Training")
-        from core import Training
-        train1 = Training()
-        train1.start()
-        print("done Training")
         # get the training "scene"
         # insert the scene 
-
+        
         #tasks:
         #gather database
         #save database
+        print("start Training")
+        from core import Training
+        train1 = Training(name=name)
+        train1.start()
+        print("done Training")
+        
         #train model
+        
+        print("creating model")
+        model1 = compose_model_db(name=name)
+        print("model created")
+        
+        
         #save model
         #close
         pass
