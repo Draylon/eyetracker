@@ -53,10 +53,11 @@ def create_model(name:str,entries:int,x_train_feats:pd.DataFrame,y_train_points:
     checkpoint = ModelCheckpoint("model/"+name+'_mdl_best.keras',save_weights_only=False, monitor='val_loss', save_best_only=True)
     
     model.fit(x_train_feats, y_train_points, epochs=500, batch_size=32, validation_split=0.2,callbacks=[checkpoint])
-    model.save("model"+name+'_mdl.keras')
+    model.save("model/"+name+'_mdl.keras')
     
     #predicted_2d = model.predict(new_input_features)
     return model
 
-def load_training_model(name):
-    return load_model(name+'_mdl.h5')
+def load_training_model(name) -> Sequential:
+    return load_model("model/"+name+'_mdl.keras')
+    #return load_model(name+'_mdl.h5')

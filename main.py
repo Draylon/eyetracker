@@ -1,19 +1,25 @@
 import sys
 import datetime
+from core import Tracker
 from utils import compose_model_db
 
 params = sys.argv[1:]
 #pairs = [(params[a],params[a+1]) for a in range(0,len(params),2)]
-params = ["create", "ayylmao"]
+#params = ["create", "ayylmao"]
+
+def build_name(params,i):
+    name = None
+    try:
+        name = params[i+1]
+    except Exception as _: pass
+    if name == None:
+        name = datetime.datetime.now().strftime('%Y%m%d_%H%M%S%f')
+    return name
+
 for i,p in enumerate(params):
     if p == "create":
         #logic:
-        name = None
-        try:
-            name = params[i+1]
-        except Exception as _: pass
-        if name == None:
-            name = datetime.datetime.now().strftime('%Y%m%d_%H%M%S%f')
+        name = build_name(params,i)
         # if param i+1 (<name>) is provided, create a database and
         # a model with the parameter, otherwise create a custom name
         
@@ -43,6 +49,9 @@ for i,p in enumerate(params):
         #logic:
         # if param i+1 (<name>) is provided, load the specific, otherwise
         # load the most recent model (search for custom name, then search the folder)
+        name = build_name(params,i)
+        tr1 = Tracker(name=name)
+        tr1.start()
 
         #tasks:
         #start the overlay
@@ -63,8 +72,3 @@ for i,p in enumerate(params):
         #close
         pass
     
-def rerun():
-    print("start Training")
-    train1 = Training()
-    train1.start()
-    print("done Training")

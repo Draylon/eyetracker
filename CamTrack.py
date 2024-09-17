@@ -6,6 +6,8 @@ import numpy as np
 import mediapipe as mp
 import utils
 
+import warnings
+
 # left eyes indices
 LEFT_EYE =[ 362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385,384, 398 ]
 # right eyes indices
@@ -73,7 +75,8 @@ class CamTrack:
 
                 rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                 img_h, img_w = frame.shape[:2]
-                results = face_mesh.process(rgb_frame)
+                with warnings.catch_warnings(action="ignore"):
+                    results = face_mesh.process(rgb_frame)
                 #mask = np.zeros((img_h, img_w), dtype=np.uint8)
 
                 if results.multi_face_landmarks:
@@ -131,7 +134,6 @@ class CamTrack:
                     p1 = (int(FACE_2D_POINTS[0][0]), int(FACE_2D_POINTS[0][1]))
                     p2 = (int(nose_end_2d[0][0][0]), int(nose_end_2d[0][0][1]))
                     #cv.line(mask, p1, p2, (255, 255, 255), 2)
-
 
                     #iris position
                     (l_cx, l_cy), l_radius = cv.minEnclosingCircle(mesh_points[LEFT_IRIS])
